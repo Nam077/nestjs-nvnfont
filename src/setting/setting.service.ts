@@ -63,6 +63,10 @@ export class SettingService {
         return await this.getSettingString('PAGE_ACCESS_TOKEN');
     }
 
+    async updatePageAccessToken(pageAccessToken: string) {
+        return await this.updateSetting('PAGE_ACCESS_TOKEN', pageAccessToken);
+    }
+
     async getCanBan() {
         return await this.getSettingBoolean('CAN_BAN');
     }

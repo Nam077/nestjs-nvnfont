@@ -5,7 +5,7 @@ import { HttpModule } from '@nestjs/axios';
 import { ChatModule } from '../chat/chat.module';
 
 @Module({
-    imports: [HttpModule, ChatModule],
+    imports: [HttpModule.register({}), ChatModule],
     controllers: [MessengerController],
     providers: [MessengerService],
 })

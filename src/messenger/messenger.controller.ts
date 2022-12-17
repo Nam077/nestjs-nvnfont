@@ -28,9 +28,16 @@ export class MessengerController {
         return this.messengerService.postWebHook(body);
     }
 
-    @Get('setup-menu')
-    @ApiOperation({ summary: 'Setup menu' })
+    @Get('setup')
+    @ApiOperation({ summary: 'Setup' })
     async setupMenu() {
-        return this.messengerService.setPersistentMenu();
+        return this.messengerService.setUp();
+    }
+
+    @IsPublic()
+    @Get('test')
+    @ApiOperation({ summary: 'Test' })
+    async test(@Query('senderPsid') senderPsid: string) {
+        return this.messengerService.test(senderPsid);
     }
 }

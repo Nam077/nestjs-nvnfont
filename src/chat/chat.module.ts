@@ -13,6 +13,7 @@ import { SettingModule } from '../setting/setting.module';
 import { ListFontModule } from '../list-font/list-font.module';
 import { BanModule } from '../ban/ban.module';
 import { AdminModule } from '../admin/admin.module';
+import { FoodModule } from '../food/food.module';
 
 @Module({
     imports: [
@@ -26,6 +27,7 @@ import { AdminModule } from '../admin/admin.module';
         ListFontModule,
         BanModule,
         AdminModule,
+        FoodModule,
     ],
     controllers: [ChatController],
     providers: [ChatService, CrawlerService, ChemistryService, ExcelService],

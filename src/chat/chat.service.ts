@@ -15,12 +15,15 @@ import { Key } from '../key/entities/key.entity';
 import { ListFont } from '../list-font/entities/list-font.entity';
 import { Ban } from '../ban/entities/ban.entity';
 import { Response } from '../response/entities/response.entity';
+import { FoodService } from '../food/food.service';
+import { Food } from '../food/entities/food.entity';
 
 @Injectable()
 export class ChatService {
     private keys: Key[] = [];
     private listFonts: ListFont[] = [];
     private adminSenderPsid: string[] = [];
+    private fonts: Font[] = [];
 
     constructor(
         private readonly keyService: KeyService,
@@ -34,18 +37,26 @@ export class ChatService {
         private readonly chemistryService: ChemistryService,
         private readonly banService: BanService,
         private readonly adminService: AdminService,
+        private readonly foodService: FoodService,
     ) {
-        this.init().then();
+        new Promise<void>(async () => {
+            await this.init();
+        }).then();
     }
 
     async init() {
         this.keys = await this.keyService.findAll();
         this.listFonts = await this.listFontService.findAll();
         this.adminSenderPsid = await this.getAllAdmins();
+        this.fonts = await this.fontService.findAll();
     }
 
     public async updateAdminSenderPsid() {
         this.adminSenderPsid = await this.getAllAdmins();
+    }
+
+    public async updateKeys() {
+        this.keys = await this.keyService.findAll();
     }
 
     public async getFontAndResponse(message: string): Promise<DataChat> {
@@ -249,14 +260,47 @@ export class ChatService {
         }
         if (message.includes('@nvn update data')) {
             const updateData = await this.updateDataBySheet();
+            await this.init();
             return {
                 typeFunction: 'UPDATE_DATA',
                 message: updateData,
             };
         }
+        if (message.includes('@nvn token')) {
+            if (message.includes('update')) {
+                const token: string = message.replace('@nvn token update ', '');
+                if (token) {
+                    await this.settingService.updatePageAccessToken(token);
+                    return {
+                        typeFunction: 'UPDATE_PAGE_ACCESS_TOKEN',
+                        message: 'Đã cập nhật token',
+                    };
+                } else {
+                    return {
+                        typeFunction: 'UPDATE_PAGE_ACCESS_TOKEN',
+                        message: 'Token không hợp lệ',
+                    };
+                }
+            }
+            if (message.includes('show')) {
+                const token = await this.settingService.getPageAccessToken();
+                return {
+                    typeFunction: 'SHOW_PAGE_ACCESS_TOKEN',
+                    message: token,
+                };
+            }
+        }
         if (message.includes('@nvn admin')) {
             //@nvn admin add psid or @nvn admin remove psid
             const validate: string = message.replace('@nvn admin ', '');
+
+            if (validate.includes('list')) {
+                const listAdmin = await this.getAdminToMessage();
+                return {
+                    typeFunction: 'LIST_ADMIN',
+                    message: listAdmin,
+                };
+            }
             if (validate.includes('add')) {
                 const psid: string = validate.replace('add ', '');
                 const admin = await this.adminService.addAdmin(psid);
@@ -275,6 +319,7 @@ export class ChatService {
                     };
                 }
             }
+
             if (validate.includes('remove')) {
                 await this.updateAdminSenderPsid();
                 const psid: string = validate.replace('remove ', '');
@@ -292,33 +337,6 @@ export class ChatService {
                 };
             }
         }
-    }
-
-    private async addBan(senderPsid: string, reason: string): Promise<Ban> {
-        return await this.banService.addBan({
-            senderPsid: senderPsid,
-            reason: reason,
-            name: 'Không có',
-        });
-    }
-
-    private async getBanToMessage(): Promise<string[]> {
-        const bans: Ban[] = await this.banService.findAll();
-        if (bans.length == 0) {
-            return ['Chưa có tài khoản nào bị cấm'];
-        }
-        const splitBans: Ban[][] = this.splitBans(bans);
-        const stringBans: string[] = [];
-        let stringBan = 'Danh sách tài khoản bị cấm: \n\n';
-        splitBans.forEach((ban: Ban[]) => {
-            ban.forEach((ban: Ban) => {
-                stringBan += `Tên: ${ban.name} \n Psid: ${ban.senderPsid} \n\n`;
-            });
-            stringBans.push(stringBan);
-            stringBan = '';
-        });
-
-        return stringBans;
     }
 
     public splitBans(bans: Ban[]): Ban[][] {
@@ -386,6 +404,76 @@ export class ChatService {
     async removeBanByPsid(senderPsid: string) {
         await this.banService.deleteByPsid(senderPsid);
     }
+
+    async getAllFont(): Promise<Font[]> {
+        return await this.fontService.findAll();
+    }
+
+    getPaginateFontList(): FontPageList {
+        return {
+            allPage: Math.ceil(this.fonts.length / 10),
+            fontPages: this.chunkFontPage(10),
+        };
+    }
+
+    chunkFontPage(size: number): FontPage[] {
+        const fontPage: FontPage[] = [];
+        for (let i = 0; i < this.fonts.length; i += size) {
+            fontPage.push({
+                fonts: this.fonts.slice(i, i + size),
+                page: i / size + 1,
+            });
+        }
+        return fontPage;
+    }
+
+    async apiTalk(message: string): Promise<string> {
+        return await this.crawlerService.apiTalk(message);
+    }
+
+    private async addBan(senderPsid: string, reason: string): Promise<Ban> {
+        return await this.banService.addBan({
+            senderPsid: senderPsid,
+            reason: reason,
+            name: 'Không có',
+        });
+    }
+
+    private async getBanToMessage(): Promise<string[]> {
+        const bans: Ban[] = await this.banService.findAll();
+        if (bans.length == 0) {
+            return ['Chưa có tài khoản nào bị cấm'];
+        }
+        const splitBans: Ban[][] = this.splitBans(bans);
+        const stringBans: string[] = [];
+        let stringBan = 'Danh sách tài khoản bị cấm: \n\n';
+        splitBans.forEach((ban: Ban[]) => {
+            ban.forEach((ban: Ban) => {
+                stringBan += `Tên: ${ban.name} \n Psid: ${ban.senderPsid} \n\n`;
+            });
+            stringBans.push(stringBan);
+            stringBan = '';
+        });
+
+        return stringBans;
+    }
+
+    private async getAdminToMessage() {
+        if (this.adminSenderPsid.length == 0) {
+            return ['Chưa có admin nào'];
+        }
+        const stringAdmins: string[] = [];
+        let stringAdmin = 'Danh sách admin: \n\n';
+        this.adminSenderPsid.forEach((admin: string) => {
+            stringAdmin += `Psid: ${admin} \n\n`;
+        });
+        stringAdmins.push(stringAdmin);
+        return stringAdmins;
+    }
+
+    async getRandomFood(): Promise<Food> {
+        return await this.foodService.getRandomFood();
+    }
 }
 
 export interface DataChat {
@@ -414,6 +502,19 @@ type AdminFunctionType =
     | 'ON_BOT'
     | 'LIST_BAN'
     | 'OFF_BOT'
-    | 'ADD_ADMIN'
     | 'UPDATE_DATA'
+    | 'SHOW_PAGE_ACCESS_TOKEN'
+    | 'UPDATE_PAGE_ACCESS_TOKEN'
+    | 'ADD_ADMIN'
+    | 'LIST_ADMIN'
     | 'REMOVE_ADMIN';
+
+export interface FontPage {
+    page?: number;
+    fonts: Font[];
+}
+
+export interface FontPageList {
+    allPage: number;
+    fontPages: FontPage[];
+}

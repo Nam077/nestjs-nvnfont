@@ -21,6 +21,11 @@ export class FoodController {
     findAll() {
         return this.foodService.findAll();
     }
+    @Get('create-many')
+    @ApiOperation({ summary: 'Create many foods' })
+    createMany() {
+        return this.foodService.createMany();
+    }
 
     @Get(':id')
     @ApiOperation({ summary: 'Get food by id' })

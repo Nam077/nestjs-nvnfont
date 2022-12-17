@@ -30,6 +30,8 @@ import { ResponseModule } from './response/response.module';
 import { Response } from './response/entities/response.entity';
 import { Link } from './link/entities/link.entity';
 import { ListFontModule } from './list-font/list-font.module';
+import { APP_GUARD } from '@nestjs/core';
+import { AtGuard } from './auth/guard/at-guard.guard';
 
 @Module({
     imports: [
@@ -51,7 +53,7 @@ import { ListFontModule } from './list-font/list-font.module';
             username: 'root',
             password: 'namnam',
             database: 'nvn-chat-bot',
-            entities: [User, Key, Font, Message, Image, Link, Food, Ban, Admin, Setting, Tag, Response, Setting],
+            entities: [User, Key, Font, Message, Image, Link, Ban, Admin, Setting, Tag, Response, Setting, Food],
             logging: false,
             synchronize: true,
             autoLoadEntities: true,
@@ -63,6 +65,12 @@ import { ListFontModule } from './list-font/list-font.module';
         ListFontModule,
     ],
     controllers: [AppController],
-    providers: [AppService],
+    providers: [
+        AppService,
+        {
+            provide: APP_GUARD,
+            useClass: AtGuard,
+        },
+    ],
 })
 export class AppModule {}

@@ -225,8 +225,8 @@ export class CrawlerService {
                 });
                 const lyricText = [];
                 if (lyricData.length > 0) {
-                    for (let i = 0; i < lyricData.length; i += 10) {
-                        const lyric = lyricData.slice(i, i + 10).join('\n');
+                    for (let i = 0; i < lyricData.length; i += 20) {
+                        const lyric = lyricData.slice(i, i + 20).join('\n');
                         lyricText.push(lyric);
                     }
                 }
