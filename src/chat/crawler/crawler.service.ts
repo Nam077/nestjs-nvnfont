@@ -3,6 +3,7 @@ import cheerio from 'cheerio';
 import * as yt from 'youtube-search-without-api-key';
 import { HttpService } from '@nestjs/axios';
 import * as listLocation from './data/listLocation.json';
+import { Configuration, OpenAIApi } from 'openai';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const translate = require('translate-google');
@@ -42,6 +43,21 @@ export class CrawlerService {
             'User-Agent':
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36',
         };
+    }
+
+    public async getChatGPT(message: string): Promise<string> {
+        try {
+            const configuration = new Configuration({
+                apiKey: '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',
+            });
+            const openai = new OpenAIApi(configuration);
+            const response = await openai.createCompletion({
+                model: 'text-davinci-003',
+                prompt: message,
+                max_tokens: 2000,
+            });
+            return response.data.choices[0].text;
+        } catch (error) {}
     }
 
     public getCrawler = async (message: string): Promise<CrawDataGoogle[]> => {

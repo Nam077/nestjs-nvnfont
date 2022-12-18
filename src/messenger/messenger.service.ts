@@ -14,6 +14,7 @@ export class MessengerService {
     private isBotCanMessage: boolean;
     private senderPsidAdmin: string[];
     private senderPsidOffBot: string[] = [];
+    private senderUsingChatGPT: string[] = [];
 
     constructor(private readonly httpService: HttpService, private readonly chatService: ChatService) {
         new Promise<void>(async () => {
@@ -27,6 +28,14 @@ export class MessengerService {
 
     removeSenderPsidOffBot(senderPsid: string): void {
         this.senderPsidOffBot.splice(this.senderPsidOffBot.indexOf(senderPsid), 1);
+    }
+
+    addSenderUsingChatGPT(senderPsid: string): void {
+        this.senderUsingChatGPT.push(senderPsid);
+    }
+
+    removeSenderUsingChatGPT(senderPsid: string): void {
+        this.senderUsingChatGPT.splice(this.senderUsingChatGPT.indexOf(senderPsid), 1);
     }
 
     getWebHook(mode: string, challenge: string, verifyToken: string) {
@@ -273,11 +282,15 @@ export class MessengerService {
                                     },
                                     {
                                         type: 'postback',
+                                        title: '📝 Chat GPT',
+                                        payload: 'CHAT_GPT',
+                                    },
+                                    {
+                                        type: 'postback',
                                         title: '🧧 Mua tổng hợp font',
                                         payload: 'BOT_BUY',
                                     },
                                     {
-                                        //Xem các font mới nhất
                                         type: 'postback',
                                         title: '🆕 Xem các font mới nhất',
                                         payload: 'LIST_FONT_IMAGE_END',
@@ -307,12 +320,6 @@ export class MessengerService {
                                         type: 'postback',
                                         title: '📣 Xem giá việt hóa',
                                         payload: 'PRICE_SERVICE',
-                                    },
-                                    {
-                                        type: 'web_url',
-                                        title: '📄 Xem trang chủ',
-                                        url: 'https://www.facebook.com/NVNFONT/',
-                                        webview_height_ratio: 'full',
                                     },
                                 ],
                             },
@@ -619,6 +626,9 @@ export class MessengerService {
             case 'LIST_FONT':
                 await this.sendListFont(senderPsid, userProfile);
                 break;
+            case 'CHAT_GPT':
+                await this.sendQuickReplyChatGPT(senderPsid, userProfile);
+                break;
             case 'HOW_TO_USE':
                 await this.sendAllFunction(senderPsid, userProfile);
                 break;
@@ -640,7 +650,11 @@ export class MessengerService {
     private async handleMessage(senderPsid: string, receivedMessage: ReceivedMessage) {
         const userProfile = await this.getUserProfile(senderPsid);
         const message = receivedMessage.text;
-
+        if (this.senderUsingChatGPT.includes(senderPsid)) {
+            const dataChatGPT = await this.chatService.getChatGPT(message);
+            await this.sendTextMessage(senderPsid, dataChatGPT);
+            return;
+        }
         if (message.toLowerCase().includes('hướng dẫn sử dụng')) {
             await this.sendAllFunction(senderPsid, userProfile);
             return;
@@ -810,6 +824,14 @@ export class MessengerService {
                 break;
             case 'HOW_TO_USE':
                 await this.sendAllFunction(senderPsid, userProfile);
+                break;
+            case 'ON_CHAT_GPT':
+                await this.sendTextMessage(senderPsid, 'Bạn đã bật chat GPT!');
+                await this.removeSenderUsingChatGPT(senderPsid);
+                break;
+            case 'OFF_CHAT_GPT':
+                await this.sendTextMessage(senderPsid, 'Bạn đã tắt chat GPT!');
+                await this.addSenderUsingChatGPT(senderPsid);
                 break;
             default:
                 break;
@@ -1029,6 +1051,29 @@ export class MessengerService {
     }
 
     // Ran
+    private async sendQuickReplyChatGPT(senderPsid: string, userProfile: UserProfile) {
+        if (this.senderUsingChatGPT.includes(senderPsid)) {
+            const message = `Chào ${userProfile.name}\nBạn đã bật CHAT GPT, bạn có muốn tắt CHAT GPT không?`;
+            const quickReplies = [
+                {
+                    content_type: 'text',
+                    title: '🔴 Tắt Chat GPT',
+                    payload: 'OFF_CHAT_GPT',
+                },
+            ];
+            await this.sendQuickReply(senderPsid, message, quickReplies);
+        } else {
+            const message = `Chào ${userProfile.name}\nBạn có muốn bật CHAT GPT không?`;
+            const quickReplies = [
+                {
+                    content_type: 'text',
+                    title: '🟢 Bật Chat GPT',
+                    payload: 'ON_CHAT_GPT',
+                },
+            ];
+            await this.sendQuickReply(senderPsid, message, quickReplies);
+        }
+    }
 }
 
 export interface UserProfile {

@@ -117,6 +117,10 @@ export class ChatService {
         return await this.crawlerService.getCrawler(message);
     }
 
+    async getChatGPT(message: string) {
+        return await this.crawlerService.getChatGPT(message);
+    }
+
     async updateDataBySheet() {
         await this.fontService.deleteAll();
         await this.responseService.deleteAll();
