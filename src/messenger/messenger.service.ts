@@ -632,7 +632,11 @@ export class MessengerService {
                 await this.sendListFont(senderPsid, userProfile);
                 break;
             case 'CHAT_GPT':
-                await this.sendQuickReplyChatGPT(senderPsid, userProfile);
+                await this.sendTextMessage(
+                    'Xin lỗi chức năng này hiện tại đang cập nhật vui lòng thử lại sau!',
+                    senderPsid,
+                );
+                // await this.sendQuickReplyChatGPT(senderPsid, userProfile);
                 break;
             case 'HOW_TO_USE':
                 await this.sendAllFunction(senderPsid, userProfile);
@@ -642,6 +646,7 @@ export class MessengerService {
                 break;
             case 'TOGGLE_BOT':
                 await this.sendQuickReplyToggleBot(senderPsid, userProfile);
+
                 break;
             default:
                 break;
@@ -655,17 +660,11 @@ export class MessengerService {
     private async handleMessage(senderPsid: string, receivedMessage: ReceivedMessage) {
         const userProfile = await this.getUserProfile(senderPsid);
         const message = receivedMessage.text;
-        if (this.senderUsingChatGPT.includes(senderPsid)) {
-            if (message.includes('@img')) {
-                const image = message.replace('@image', '');
-                const url = await this.chatService.getImageChatGPt(image);
-                await this.sendImageMessage(senderPsid, url);
-                return;
-            }
-            const dataChatGPT = await this.chatService.getChatGPT(message);
-            await this.sendTextMessage(senderPsid, dataChatGPT);
-            return;
-        }
+        // if (this.senderUsingChatGPT.includes(senderPsid)) {
+        //     const dataChatGPT = await this.chatService.getChatGPT(message);
+        //     await this.sendTextMessage(senderPsid, dataChatGPT);
+        //     return;
+        // }
         if (message.toLowerCase().includes('hướng dẫn sử dụng')) {
             await this.sendAllFunction(senderPsid, userProfile);
             return;
