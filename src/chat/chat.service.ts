@@ -373,9 +373,9 @@ export class ChatService {
             //get giờ viêt nam hiện tại
             const isCanBan: boolean = await this.settingService.getSettingBoolean('CAN_BAN');
             if (isCanBan) {
-                const date = new Date();
-                date.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-                const hour = date.getHours();
+                const timeNow = new Date();
+                const timeNowVN = timeNow.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+                const hour = Number(timeNowVN.split(':')[0]);
                 if (hour >= 0 && hour <= 5) {
                     const stringBan: string[] = [];
                     const reason = `Nhắn tin quá thời gian quy định`;
@@ -477,6 +477,10 @@ export class ChatService {
 
     async getRandomFood(): Promise<Food> {
         return await this.foodService.getRandomFood();
+    }
+
+    async getImageChatGPt(message: string): Promise<string> {
+        return await this.crawlerService.getImageChatGPt(message);
     }
 }
 

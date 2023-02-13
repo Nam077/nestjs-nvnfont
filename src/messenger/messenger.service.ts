@@ -133,6 +133,7 @@ export class MessengerService {
 
     async sendGreetings(senderPsid: string, userProfile: UserProfile): Promise<void> {
         this.removeSenderPsidOffBot(senderPsid);
+        this.removeSenderUsingChatGPT(senderPsid);
         await this.sendTextMessage(senderPsid, senderPsid);
         await this.sendGreeting(senderPsid, userProfile);
         await this.sendImageMessage(senderPsid, userProfile.profile_pic);
@@ -360,16 +361,20 @@ export class MessengerService {
                     if (this.isBotCanMessage || this.senderPsidAdmin.includes(senderPsid)) {
                         if (webhook_event.message && webhook_event.message.quick_reply) {
                             await this.handleQuickReply(senderPsid, webhook_event.message.quick_reply);
+                            return;
                         }
                         if (webhook_event.message) {
                             if (webhook_event.message.text && !this.senderPsidOffBot.includes(senderPsid)) {
                                 await this.handleMessage(senderPsid, webhook_event.message);
+                                return;
                             }
                             if (webhook_event.message.attachments) {
                                 // await this.handleAttachment(sender_psid, webhook_event.message);
+                                return;
                             }
                         } else if (webhook_event.postback) {
                             await this.handlePostback(senderPsid, webhook_event.postback);
+                            return;
                         }
                     }
                 }
@@ -478,9 +483,9 @@ export class MessengerService {
     }
 
     public async sendGreeting(senderPsid: string, userProfile: UserProfile) {
-        const date = new Date();
-        date.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-        const hour = date.getHours();
+        const timeNow = new Date();
+        const timeNowVN = timeNow.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+        const hour = Number(timeNowVN.split(':')[0]);
         if (hour >= 5 && hour < 10) {
             await this.sendTextMessage(senderPsid, `Chào ${userProfile.name}, chúc bạn một buổi sáng tốt lành!`);
         } else if (hour >= 10 && hour <= 12) {
@@ -651,6 +656,12 @@ export class MessengerService {
         const userProfile = await this.getUserProfile(senderPsid);
         const message = receivedMessage.text;
         if (this.senderUsingChatGPT.includes(senderPsid)) {
+            if (message.includes('@img')) {
+                const image = message.replace('@image', '');
+                const url = await this.chatService.getImageChatGPt(image);
+                await this.sendImageMessage(senderPsid, url);
+                return;
+            }
             const dataChatGPT = await this.chatService.getChatGPT(message);
             await this.sendTextMessage(senderPsid, dataChatGPT);
             return;
@@ -827,11 +838,11 @@ export class MessengerService {
                 break;
             case 'ON_CHAT_GPT':
                 await this.sendTextMessage(senderPsid, 'Bạn đã bật chat GPT!');
-                await this.removeSenderUsingChatGPT(senderPsid);
+                await this.addSenderUsingChatGPT(senderPsid);
                 break;
             case 'OFF_CHAT_GPT':
                 await this.sendTextMessage(senderPsid, 'Bạn đã tắt chat GPT!');
-                await this.addSenderUsingChatGPT(senderPsid);
+                await this.removeSenderUsingChatGPT(senderPsid);
                 break;
             default:
                 break;

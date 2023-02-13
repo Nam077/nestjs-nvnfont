@@ -36,6 +36,10 @@ export interface CrawDataLucky {
 @Injectable()
 export class CrawlerService {
     private header;
+    private configuration = new Configuration({
+        apiKey: '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',
+    });
+    private openai = new OpenAIApi(this.configuration);
 
     constructor(private readonly httpService: HttpService) {
         this.header = {
@@ -46,17 +50,27 @@ export class CrawlerService {
     }
 
     public async getChatGPT(message: string): Promise<string> {
+        // nếu phản hồi quá 5s thì trả về lỗi
+
         try {
-            const configuration = new Configuration({
-                apiKey: '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',
-            });
-            const openai = new OpenAIApi(configuration);
-            const response = await openai.createCompletion({
+            const response = await this.openai.createCompletion({
                 model: 'text-davinci-003',
                 prompt: message,
                 max_tokens: 2000,
             });
             return response.data.choices[0].text;
+        } catch (error) {}
+    }
+
+    async getImageChatGPt(message: string): Promise<string> {
+        try {
+            const response = await this.openai.createImage({
+                prompt: message,
+                n: 1,
+                size: '512x512',
+                response_format: 'url',
+            });
+            return response.data[0].url;
         } catch (error) {}
     }
 
