@@ -59,12 +59,26 @@ export class ChatService {
         this.keys = await this.keyService.findAll();
     }
 
+    public checkKeyHaveMessage(key: string, message: string): boolean {
+        if (message.toLowerCase().includes(key.toLowerCase())) {
+            return true;
+        } else {
+            const messageWithoutSpace = message.replace(/\s+/g, ' ').trim();
+            const words = messageWithoutSpace.split(' ');
+            words.forEach((word) => {
+                if (longestCommonSubstring(word, key).similarity > 70) {
+                    return true;
+                }
+            });
+        }
+        return false;
+    }
     public async getFontAndResponse(message: string): Promise<DataChat> {
         let fonts: Font[] = [];
         const responses: Response[] = [];
         this.keys.forEach((key: Key) => {
             const value = key.value;
-            if (message.toLowerCase().includes(value)) {
+            if (this.checkKeyHaveMessage(value, message)) {
                 if (key.font) {
                     fonts.push(key.font);
                 }
@@ -526,3 +540,34 @@ export interface FontPageList {
     allPage: number;
     fontPages: FontPage[];
 }
+interface LCSResult {
+    LCS_table: number[][];
+    longestSubstring: string | null;
+    startIndex: number;
+    endIndex: number;
+    similarity: number;
+}
+export const longestCommonSubstring = (str1: string, str2: string): LCSResult => {
+    const m = str1.length;
+    const n = str2.length;
+    const LCS_table: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+    let longestLength = 0;
+    let endIndex = 0;
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            if (str1[i - 1] === str2[j - 1]) {
+                LCS_table[i][j] = LCS_table[i - 1][j - 1] + 1;
+                if (LCS_table[i][j] > longestLength) {
+                    longestLength = LCS_table[i][j];
+                    endIndex = i;
+                }
+            } else {
+                LCS_table[i][j] = 0;
+            }
+        }
+    }
+    const startIndex = endIndex - longestLength;
+    const longestSubstring = longestLength > 0 ? str1.substring(startIndex, endIndex) : null;
+    const similarity = ((2 * longestLength) / (m + n)) * 100;
+    return { LCS_table, longestSubstring, startIndex, endIndex, similarity };
+};
