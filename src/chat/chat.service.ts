@@ -66,7 +66,7 @@ export class ChatService {
             const messageWithoutSpace = message.replace(/\s+/g, ' ').trim();
             const words = messageWithoutSpace.split(' ');
             for (const word of words) {
-                if (this.checkKeyHaveMessage(key, message)) {
+                if (longestCommonSubstring(word.toLowerCase(), key.value.toLowerCase()).similarity > 40) {
                     return true;
                 }
             }
