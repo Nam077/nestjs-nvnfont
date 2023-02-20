@@ -59,17 +59,17 @@ export class ChatService {
         this.keys = await this.keyService.findAll();
     }
 
-    public checkKeyHaveMessage(key: string, message: string): boolean {
-        if (message.toLowerCase().includes(key.toLowerCase())) {
+    public checkKeyHaveMessage(key: Key, message: string): boolean {
+        if (message.toLowerCase().includes(key.value.toLowerCase())) {
             return true;
-        } else {
+        } else if (key.font) {
             const messageWithoutSpace = message.replace(/\s+/g, ' ').trim();
             const words = messageWithoutSpace.split(' ');
-            words.forEach((word) => {
-                if (longestCommonSubstring(word, key).similarity > 70) {
+            for (const word of words) {
+                if (this.checkKeyHaveMessage(key, message)) {
                     return true;
                 }
-            });
+            }
         }
         return false;
     }
@@ -77,8 +77,7 @@ export class ChatService {
         let fonts: Font[] = [];
         const responses: Response[] = [];
         this.keys.forEach((key: Key) => {
-            const value = key.value;
-            if (this.checkKeyHaveMessage(value, message)) {
+            if (this.checkKeyHaveMessage(key, message)) {
                 if (key.font) {
                     fonts.push(key.font);
                 }
