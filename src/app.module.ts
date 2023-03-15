@@ -32,6 +32,8 @@ import { Link } from './link/entities/link.entity';
 import { ListFontModule } from './list-font/list-font.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AtGuard } from './auth/guard/at-guard.guard';
+import { GameVkuModule } from './game_vku/game_vku.module';
+import { GameVKU } from './game_vku/entities/game_vku.entity';
 
 @Module({
     imports: [
@@ -51,9 +53,24 @@ import { AtGuard } from './auth/guard/at-guard.guard';
             host: 'localhost',
             port: 3306,
             username: 'root',
-            password: 'namnam',
+            password: '12345',
             database: 'nvn-chat-bot',
-            entities: [User, Key, Font, Message, Image, Link, Ban, Admin, Setting, Tag, Response, Setting, Food],
+            entities: [
+                User,
+                Key,
+                Font,
+                Message,
+                Image,
+                Link,
+                Ban,
+                Admin,
+                Setting,
+                Tag,
+                Response,
+                Setting,
+                Food,
+                GameVKU, //
+            ],
             logging: false,
             synchronize: true,
             autoLoadEntities: true,
@@ -63,6 +80,7 @@ import { AtGuard } from './auth/guard/at-guard.guard';
         SettingModule,
         ResponseModule,
         ListFontModule,
+        GameVkuModule,
     ],
     controllers: [AppController],
     providers: [

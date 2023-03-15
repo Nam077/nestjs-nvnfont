@@ -44,14 +44,14 @@ export class ChatService {
         }).then();
     }
 
-    async init() {
+    async init(): Promise<void> {
         this.keys = await this.keyService.findAll();
         this.listFonts = await this.listFontService.findAll();
         this.adminSenderPsid = await this.getAllAdmins();
         this.fonts = await this.fontService.findAll();
     }
 
-    public async updateAdminSenderPsid() {
+    public async updateAdminSenderPsid(): Promise<void> {
         this.adminSenderPsid = await this.getAllAdmins();
     }
 
@@ -110,7 +110,7 @@ export class ChatService {
         return this.crawlerService.getLuckyNumber(message);
     }
 
-    async getDataXoSo() {
+    async getDataXoSo(): Promise<string> {
         return this.crawlerService.crawlerXSMB();
     }
 
