@@ -1,6 +1,12 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ChatService } from './chat.service';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
+import { IsPublic } from '../decorators/auth/auth.decorator';
+
+export class TestDto {
+    @ApiProperty()
+    message: string;
+}
 
 @Controller('chat')
 @ApiTags('Chat')
@@ -12,5 +18,12 @@ export class ChatController {
     @ApiOperation({ summary: 'Get all chats' })
     async findAll() {
         return this.chatService.updateDataBySheet();
+    }
+
+    @Post()
+    @IsPublic()
+    @ApiOperation({ summary: 'Get all chats' })
+    async test(@Body() body: TestDto) {
+        return this.chatService.test(body.message);
     }
 }

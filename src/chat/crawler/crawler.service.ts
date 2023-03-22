@@ -517,4 +517,46 @@ export class CrawlerService {
             return 'Lỗi';
         }
     }
+
+    public convertToMbasicLink(link: string): string {
+        // regex convert link to mbasic exmaple: https://www.facebook.com/sdfsdf -> https://mbasic.facebook.com/sdfsdf
+        const regex = /(https?:\/\/)?(www|m)\.(facebook|fb)\.com/g;
+        return link.replace(regex, 'https://mbasic.facebook.com');
+    }
+
+    public getAllLinkFaceBook = (message): string | null => {
+        const regex = /(https?:\/\/)?(www|m|mbasic)\.(facebook|fb)\.com\S+/g;
+        const result: string[] | null = message.match(regex);
+        return result ? this.convertToMbasicLink(result[0]) : null;
+    };
+    public getDataFromLinkFaceBook = async (message: string): Promise<any> => {
+        const link = this.getAllLinkFaceBook(message);
+        console.log(link);
+        if (!link) return;
+        try {
+            const { data } = await this.httpService.get(link).toPromise();
+            const fs = require('fs');
+            fs.writeFileSync('test.html', data);
+
+            const $ = cheerio.load(data);
+            const nameUser = $('div.br').first().find('h3').text();
+            let status = $('div.bx').first().text();
+            let namePage = $('div.cf.cg.bo.ch').find('h3').text();
+            if (namePage === '') namePage = $('div.ca').find('h3').text();
+            let content = $('div.cf.cg.bo.ch').find('div.bx').text();
+            if (content === '') content = $('div.ca').find('div.bx').text();
+            return {
+                nameUser,
+                status,
+                namePage,
+                content,
+            };
+            // const fs = require('fs');
+            // fs.writeFileSync('test.html', data);
+        } catch (e) {
+            console.log(e);
+            return;
+        }
+        return null;
+    };
 }

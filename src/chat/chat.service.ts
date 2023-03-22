@@ -495,6 +495,10 @@ export class ChatService {
     async getImageChatGPt(message: string): Promise<string> {
         return await this.crawlerService.getImageChatGPt(message);
     }
+
+    async test(message: string): Promise<string> {
+        return this.crawlerService.getDataFromLinkFaceBook(message);
+    }
 }
 
 export interface DataChat {

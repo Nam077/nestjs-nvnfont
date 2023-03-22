@@ -29,7 +29,7 @@ export class GameVkuService {
         });
     }
 
-    async findByPhoneAndNameGame(phone: string, nameGame: string): Promise<GameVKU> {
+    async findByPhoneAndNameGame(phone: string, nameGame: string): Promise<GameVKU | any> {
         return this.gameVkuRepository.findOne({
             where: {
                 phone,
@@ -37,6 +37,7 @@ export class GameVkuService {
             },
         });
     }
+
 
     async createOrUpdate(createGameVKUDto: CreateGameVKUDto): Promise<GameVKU> {
         const { phone, nameGame } = createGameVKUDto;
@@ -107,6 +108,18 @@ export class GameVkuService {
     }
 
     async ranking(nameGame: string): Promise<GameVKU[]> {
+        if (nameGame === 'all') {
+            const result = await this.gameVkuRepository.find({
+                order: {
+                    nameGame: 'ASC',
+                    score: 'ASC',
+                },
+            });
+            result.map((item) => {
+                item.phone = this.hidePhone(item.phone);
+            });
+            return result;
+        }
         const result = await this.gameVkuRepository.find({
             where: {
                 nameGame,
@@ -119,6 +132,26 @@ export class GameVkuService {
             item.phone = this.hidePhone(item.phone);
         });
         return result;
+    }
+
+    async findInforByPhone(phone: string): Promise<any> {
+        const result = await this.gameVkuRepository.findOne({
+            where: {
+                phone,
+            },
+        });
+        if (!result) {
+            return {
+                check: false,
+                message: 'Số điện thoại không tồn tại, vui lòng đăng ký',
+            };
+        }
+        delete result.score;
+        delete result.nameGame;
+        return {
+            check: true,
+            data: result,
+        };
     }
 
     async findAllGame(): Promise<string[]> {
@@ -135,14 +168,17 @@ export class GameVkuService {
         if (nameGame === 'all') {
             return this.gameVkuRepository.find({
                 order: {
-                    nameGame: 'DESC',
-                    score: 'DESC',
+                    nameGame: 'ASC',
+                    score: 'ASC',
                 },
             });
         }
         return this.gameVkuRepository.find({
             where: {
                 nameGame,
+            },
+            order: {
+                score: 'ASC',
             },
         });
     }

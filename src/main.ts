@@ -12,6 +12,7 @@ async function bootstrap() {
         .addBearerAuth()
         .setExternalDoc('For more information', '')
         .build();
+    app.enableCors();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, document);
     console.clear();

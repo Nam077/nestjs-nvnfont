@@ -17,6 +17,7 @@ export class GameVkuController {
         return this.gameVkuService.create(createGameVkuDto);
     }
 
+    @IsPublic()
     @Post('/find-by-phone-and-name_game')
     findByPhoneAndNameGame(@Body() findByPhoneAndNamGame: FindByPhoneAndNameGameDto) {
         return this.gameVkuService.findByPhoneAndNameGame(findByPhoneAndNamGame.phone, findByPhoneAndNamGame.nameGame);
