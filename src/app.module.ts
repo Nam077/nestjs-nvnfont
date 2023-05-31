@@ -53,7 +53,7 @@ import { GameVKU } from './game_vku/entities/game_vku.entity';
             host: 'db4free.net',
             port: 3306,
             username: 'nvnfont112 ',
-            password: 'Nampronam1',
+            password: 'Vhv-3q7-e2V-zEV',
             database: 'nvnfont112',
             entities: [
                 User,
