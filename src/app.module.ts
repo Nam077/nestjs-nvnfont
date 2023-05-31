@@ -50,11 +50,11 @@ import { GameVKU } from './game_vku/entities/game_vku.entity';
         AuthModule,
         TypeOrmModule.forRoot({
             type: 'mysql',
-            host: 'localhost',
+            host: 'sql12.freesqldatabase.com',
             port: 3306,
-            username: 'root',
-            password: '12345',
-            database: 'nvn-chat-bot',
+            username: 'sql12622801',
+            password: 'i5kesNhIgv',
+            database: 'sql12622801',
             entities: [
                 User,
                 Key,

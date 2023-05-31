@@ -414,6 +414,10 @@ export class ChatService {
         return await this.settingService.getPageAccessToken();
     }
 
+    async updatePageAccessToken(token: string) {
+        await this.settingService.updatePageAccessToken(token);
+    }
+
     async getIsBotCanMessage() {
         return await this.settingService.getSettingBoolean('BOT_CAN_MESSAGE');
     }

@@ -7,7 +7,7 @@ import { Not, Repository } from 'typeorm';
 
 @Injectable()
 export class GameVkuService {
-    constructor(@InjectRepository(GameVKU) private gameVkuRepository: Repository<GameVKU>) {}
+    constructor(@InjectRepository(GameVKU) private gameVkuRepository: Repository<GameVKU>) { }
 
     async create(createGameVkuDto: CreateGameVKUDto): Promise<GameVKU> {
         return this.createOrUpdate(createGameVkuDto);
@@ -183,17 +183,32 @@ export class GameVkuService {
         });
     }
 
+    /**
+ * Deletes a game from the database.
+ * 
+ * @param nameGame - The name of the game to delete, or 'all' to delete all games.
+ * @param confirm - A confirmation string that must be 'yes' to delete the game.
+ * @returns A string indicating whether the game or games were successfully deleted.
+ * @throws HttpException if confirm is not 'yes'.
+ */
     async deleteBy(nameGame: string, confirm: string): Promise<string> {
+        // Check that confirm is 'yes'
         if (!confirm && confirm !== 'yes') {
             throw new HttpException('Confirm is not correct', HttpStatus.BAD_REQUEST);
         }
+
+        // If nameGame is 'all', delete all games
         if (nameGame === 'all') {
             await this.gameVkuRepository.delete({});
             return 'All games deleted';
         }
+
+        // Otherwise, delete the game with the specified name
         await this.gameVkuRepository.delete({
             nameGame,
         });
+
         return 'Game deleted';
     }
+
 }

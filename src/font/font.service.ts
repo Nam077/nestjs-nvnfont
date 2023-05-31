@@ -27,6 +27,15 @@ export class FontService {
         private readonly imageService: ImageService,
     ) {}
 
+    /**
+     * Tạo một thực thể Font mới và lưu trữ nó vào cơ sở dữ liệu.
+     * Nếu một font với cùng tên đã tồn tại, trả về font đó.
+     *
+     * @param createFontDto - Dữ liệu để tạo Font.
+     * @returns Thực thể Font đã tạo hoặc đã tồn tại.
+     * @throws Một lỗi nếu thực thể Font hoặc các thực thể liên quan không thể được lưu trữ.
+     */
+
     async create(createFontDto: CreateFontDto): Promise<Font> {
         const font = await this.fontRepository.findOne({ where: { name: createFontDto.name } });
         if (font) {
@@ -84,11 +93,25 @@ export class FontService {
             },
         });
     }
+    /**
+     * Updates a font with the given ID using the provided data.
+     * @param id - The ID of the font to update.
+     * @param updateFontDto - The data to update the font with.
+     * @returns A Promise that resolves to the updated font.
+     * @throws An Error with message "Font not found" if no font with the given ID exists.
+     */
 
     async update(id: number, updateFontDto: UpdateFontDto): Promise<Font> {
         throw new Error('Font not found');
     }
 
+    /**
+     * Remove a font with the given ID from the font repository.
+     *
+     * @param id - The ID of the font to remove.
+     * @throws An error if the font is not found.
+     * @returns A Promise that resolves when the font is removed.
+     */
     async remove(id: number): Promise<void> {
         const font = await this.findOne(id);
         if (font) {

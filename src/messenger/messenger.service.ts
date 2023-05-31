@@ -4,17 +4,17 @@ import { Font } from '../font/entities/font.entity';
 import { AdminFunction, BanCheck, ChatService, DataChat, FontPageList } from '../chat/chat.service';
 import { CrawDataGoogle, CrawDataLucky, CrawDataYoutube, CrawlerCovid } from '../chat/crawler/crawler.service';
 import { Food } from '../food/entities/food.entity';
-
+import axios from 'axios';
 @Injectable()
 export class MessengerService {
     private pageAccessToken: string;
-    private apiVersion = 'v15.0';
+    private apiVersion = 'v16.0';
     private headers;
     private verifyToken = 'nam077';
     private isBotCanMessage: boolean;
     private senderPsidAdmin: string[];
     private senderPsidOffBot: string[] = [];
-
+    //
     constructor(private readonly httpService: HttpService, private readonly chatService: ChatService) {
         new Promise<void>(async () => {
             await this.init();
@@ -40,6 +40,9 @@ export class MessengerService {
         this.isBotCanMessage = await this.chatService.getIsBotCanMessage();
         this.senderPsidAdmin = await this.chatService.getAllAdmins();
         this.pageAccessToken = await this.chatService.getPageAccessToken();
+        // this.pageAccessToken =
+        //     'EAAPh2Rl2xOcBAB215SqGZCiPmaKq81ymyxArkxZB7cuvPdOyQGeHbIw1bEtOJ2YR2qjS5BueSLwVGsBS0ylbFk2TckcTibTsJfyBGpAvUeuRW4oxpOBISxZCyQUBpJV1ZCs75JZAC0t04ZCNS8T7PY2EGJheDLDZCzVrypee0RPhmtD6xDg9KZBU';
+
         this.headers = {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${this.pageAccessToken}`,
@@ -88,17 +91,16 @@ export class MessengerService {
             },
             message: response,
         };
+
         await this.sendMarkSeen(senderPsid);
         await this.sendTypingOn(senderPsid);
         try {
-            await this.httpService
-                .post(`https://graph.facebook.com/${this.apiVersion}/me/messages`, requestBody, {
-                    headers: this.headers,
-                })
-                .toPromise()
-                .catch();
+            await axios.post(`https://graph.facebook.com/${this.apiVersion}/me/messages`, requestBody, {
+                headers: this.headers,
+            });
         } catch (e) {
             console.log("Can't send message!");
+            console.log(e);
         } finally {
             await this.sendTypingOff(senderPsid);
         }
@@ -109,7 +111,7 @@ export class MessengerService {
             recipient: {
                 id: senderPsid,
             },
-            sender_action: 'typing_on',
+            sender_action: 'TYPING_ON',
         };
         return new Promise(async (resolve, reject) => {
             await this.httpService
@@ -124,9 +126,13 @@ export class MessengerService {
 
     async sendGreetings(senderPsid: string, userProfile: UserProfile): Promise<void> {
         this.removeSenderPsidOffBot(senderPsid);
+        console.log('1');
         await this.sendTextMessage(senderPsid, senderPsid);
+        console.log(`2`);
         await this.sendGreeting(senderPsid, userProfile);
+        console.log(`3`);
         await this.sendImageMessage(senderPsid, userProfile.profile_pic);
+        console.log(`4`);
         await this.sendQuickRepliesGreeting(senderPsid, userProfile);
     }
 
@@ -157,7 +163,7 @@ export class MessengerService {
             recipient: {
                 id: senderPsid,
             },
-            sender_action: 'typing_off',
+            sender_action: 'TYPING_OFF',
         };
         try {
             return new Promise(async (resolve, reject) => {
@@ -179,7 +185,7 @@ export class MessengerService {
             recipient: {
                 id: senderPsid,
             },
-            sender_action: 'mark_seen',
+            sender_action: 'MARK_SEEN',
         };
         try {
             return new Promise(async (resolve, reject) => {
@@ -598,6 +604,8 @@ export class MessengerService {
     private async handlePostback(senderPsid: string, receivedPostback: any) {
         const userProfile: UserProfile = await this.getUserProfile(senderPsid);
         const payload = receivedPostback.payload;
+        console.log(payload);
+
         const handle = await this.handleResponseAndFont(senderPsid, payload, userProfile);
         if (handle) return;
         switch (payload) {
@@ -605,6 +613,8 @@ export class MessengerService {
                 await this.sendGreetings(senderPsid, userProfile);
                 break;
             case 'RESTART_BOT':
+                console.log('Restart bot');
+
                 await this.sendGreetings(senderPsid, userProfile);
                 break;
             case 'BOT_BUY':
@@ -1024,6 +1034,13 @@ export class MessengerService {
         await this.sendTextMessage(senderPsid, food.description);
         await this.sendTextMessage(senderPsid, food.recipe);
         return;
+    }
+
+    async setupAccessToken(body) {
+        const accessToken = body.access_token;
+        await this.chatService.updatePageAccessToken(accessToken);
+        await this.init();
+        return 'success';
     }
 }
 

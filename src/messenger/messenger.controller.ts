@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { MessengerService } from './messenger.service';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IsPublic } from '../decorators/auth/auth.decorator';
 
 @Controller('messenger')
@@ -39,5 +39,23 @@ export class MessengerController {
     @ApiOperation({ summary: 'Test' })
     async test(@Query('senderPsid') senderPsid: string) {
         return this.messengerService.test(senderPsid);
+    }
+
+    @IsPublic()
+    @Post('/setup-access-token')
+    @ApiOperation({ summary: 'Setup access token' })
+    @ApiBody({
+        type: 'object',
+        schema: {
+            type: 'object',
+            properties: {
+                access_token: {
+                    type: 'string',
+                },
+            },
+        },
+    })
+    async setupAccessToken(@Body() body) {
+        return this.messengerService.setupAccessToken(body);
     }
 }
